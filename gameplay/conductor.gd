@@ -10,7 +10,7 @@ var bpm = 0.0
 var raw_time = 0.0
 var time = 0.0
 var beat = 0.0
-var beat_i = -4
+var beat_i = 0
 
 var last_audio_time = 0.0
 
@@ -24,17 +24,18 @@ func _ready():
 	set_process(true)
 	tracks = get_node("Tracks").get_children()
 	
-	for track in tracks:
-		track.play()
-	
-	for track in tracks:
-		track.stop()
+	var timer = get_node("Timer")
+	timer.start()
+	yield(timer, "timeout")
 	
 	for track in tracks:
 		track.play()
 
 
 func _process(delta):
+	if not tracks[0].is_playing():
+		return
+	
 	var last_beat = beat_i
 	var audio_time = tracks[0].get_pos()
 	
