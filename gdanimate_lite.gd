@@ -6,6 +6,7 @@ export(String, DIR) var folder = "res://"
 
 export var symbol = ""
 export var frame = 0
+export var offset = Vector2(0, 0)
 
 var spritemap = {}
 var symbols = {}
@@ -18,8 +19,10 @@ var optim
 
 var internal_folder
 
+var last_folder
 var last_symbol
 var last_frame
+var last_offset
 
 var items = []
 var items_index = 0
@@ -31,6 +34,15 @@ func _ready():
 
 
 func _process(delta):
+	if last_folder != folder:
+		last_folder = folder
+		parse()
+		update()
+
+	if last_offset != offset:
+		last_offset = offset
+		update()
+
 	if last_symbol != symbol:
 		last_symbol = symbol
 		update()
@@ -62,6 +74,8 @@ func _draw():
 	else:
 		transform = Matrix32(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
 	
+	transform = transform.translated(offset)
+	
 	var item = get_canvas_item()
 	VisualServer.canvas_item_clear(get_canvas_item())
 	draw_symbol(symbols[target_symbol], frame, transform, item)
@@ -74,7 +88,6 @@ func get_frame_after(element, amount):
 	elif element["loop_mode"] == key("playonce", "PO"):
 		return clamp(element["first_frame"] + amount, 0, symbol["length"] - 1)
 	
-	print(element["key"])
 	return element["first_frame"]
 
 
@@ -92,7 +105,7 @@ func draw_symbol(symbol, frame, transform, item):
 			
 			for element in layer_frame["elements"]:
 				if element["type"] == "SI":
-					draw_symbol(symbols[element["key"]], get_frame_after(element, frame), transform * element["transform"], item)
+					draw_symbol(symbols[element["key"]], get_frame_after(element, frame - layer_frame["index"]), transform * element["transform"], item)
 				elif element["type"] == "ASI":
 					var new_item
 					items_index += 1
@@ -108,11 +121,14 @@ func draw_symbol(symbol, frame, transform, item):
 					var tex = spritemap[element["key"]]
 					var sprite_transform = Matrix32(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
 					if tex.get_meta("rotated") == true:
-						sprite_transform = sprite_transform.translated(Vector2(0, tex.get_width()))
 						sprite_transform = sprite_transform.rotated(deg2rad(90.0))
 					
-					VisualServer.canvas_item_set_transform(new_item, element["transform"] * transform * sprite_transform)
-					tex.draw(new_item, Vector2(0, 0))
+					VisualServer.canvas_item_set_transform(new_item, (transform * element["transform"]) * sprite_transform)
+					
+					if tex.get_meta("rotated") == true:
+						tex.draw(new_item, Vector2(-tex.get_width(), 0))
+					else:
+						tex.draw(new_item, Vector2(0, 0))
 
 
 func parse():

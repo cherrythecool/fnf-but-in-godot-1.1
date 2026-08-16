@@ -23,6 +23,15 @@ func _enter_tree():
 func _ready():
 	set_process(true)
 	tracks = get_node("Tracks").get_children()
+	
+	for track in tracks:
+		track.play()
+	
+	for track in tracks:
+		track.stop()
+	
+	for track in tracks:
+		track.play()
 
 
 func _process(delta):
@@ -39,7 +48,7 @@ func _process(delta):
 	beat = time * (bpm / 60.0)
 	beat_i = int(beat)
 	
-	if beat_i != last_beat:
+	if beat_i > last_beat:
 		SignalBus.send_signal("beat_hit", beat_i)
 
 

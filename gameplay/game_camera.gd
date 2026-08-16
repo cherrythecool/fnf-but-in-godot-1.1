@@ -1,12 +1,16 @@
 extends Camera2D
 
 
+export var target_zoom = 1.0
+
 var SignalBus
 var Conductor
 
 var targets = []
 var sections = []
 var sections_index = 0
+
+var target_pos = Vector2(0, 0)
 
 
 func _enter_tree():
@@ -19,17 +23,13 @@ func _ready():
 	Conductor = get_tree().get_current_scene().get_node("Conductor")
 	targets = get_tree().get_current_scene().get_node("CameraTargets").get_children()
 	
-	set_follow_smoothing(false)
+	set_zoom(Vector2(target_zoom, target_zoom))
+	
 	update_cam_target()
-	force_update_scroll()
-	set_follow_smoothing(true)
+	set_pos(target_pos)
 
 
 func _process(delta):
-	var s = get_zoom()
-	s = Vector2(lerp(s.x, 1.0, min(delta * 6.0, 1.0)), lerp(s.y, 1.0, min(delta * 6.0, 1.0)))
-	set_zoom(s)
-	
 	while sections_index < sections.size():
 		if Conductor.beat_i > sections[sections_index][0]:
 			sections_index += 1
@@ -37,6 +37,14 @@ func _process(delta):
 			break
 	
 	update_cam_target()
+	
+	var s = get_zoom()
+	s = Vector2(lerp(s.x, target_zoom, min(delta * 6.0, 1.0)), lerp(s.y, target_zoom, min(delta * 6.0, 1.0)))
+	set_zoom(s)
+	
+	var p = get_pos()
+	p = Vector2(lerp(p.x, target_pos.x, min(delta * 4.5, 1.0)), lerp(p.y, target_pos.y, min(delta * 4.5, 1.0)))
+	set_pos(p)
 
 
 func _on_signal_emit():
@@ -64,6 +72,6 @@ func update_cam_target():
 	
 	var section = sections[sections_index]
 	if section[1]:
-		set_pos(targets[0].get_pos())
+		target_pos = targets[0].get_pos()
 	else:
-		set_pos(targets[1].get_pos())
+		target_pos = targets[1].get_pos()

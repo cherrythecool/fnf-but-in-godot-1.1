@@ -120,6 +120,8 @@ func _on_signal_emit():
 				continue
 			if note[1] > 3 and not is_opponent:
 				continue
+			if note[1] < 0:
+				continue
 
 			notes.push_back([
 				float(note[0]) / 1000.0,
